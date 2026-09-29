@@ -1,0 +1,53 @@
+[workspace]
+name = "rocm10-gfx1201-vllm"
+version = "0.1.0"
+channels = ["conda-forge"]
+platforms = [{ platform = "linux-64", glibc = "2.35" }]
+
+[dependencies]
+python = "3.12.*"
+uv = "*"
+cmake = ">=3.26,<4"
+ninja = "*"
+git = "*"
+rust = "*"
+gxx_linux-64 = "14.*"
+pkg-config = "*"
+patch = "*"
+
+[pypi-options]
+index-url = "https://pypi.org/simple"
+extra-index-urls = ["https://stable.repo.amd.com/rocm/whl-next/"]
+index-strategy = "unsafe-best-match"
+
+[pypi-dependencies]
+rocm = { version = "==10.0.0", extras = ["libraries", "devel", "device-gfx1201"] }
+torch = { version = "==2.13.0+rocm10.0.0", extras = ["device-gfx1201"] }
+
+# Build dependencies must be present for --no-build-isolation.
+setuptools = "<80.0.0,>=77.0.3"
+setuptools-scm = ">=8"
+setuptools-rust = ">=1.9.0"
+packaging = ">=26.2"
+wheel = "*"
+jinja2 = ">=3.1.6"
+
+# Focused backend, kernel, and workspace development checks.
+pytest = "*"
+pytest-timeout = "*"
+tblib = "*"
+expecttest = "*"
+pre-commit = ">=4.5.1"
+ruff = "*"
+
+[activation]
+scripts = ["scripts/activate_rocm.sh"]
+
+[tasks]
+check-torch = ".venv/bin/python scripts/check_torch.py"
+install-vllm = { cmd = "bash scripts/install_vllm.sh" }
+smoke = { cmd = "../.venv/bin/python ../scripts/smoke_vllm.py", cwd = "vllm" }
+smoke-segmented = { cmd = "../.venv/bin/python ../scripts/smoke_vllm.py", cwd = "vllm", env = { VLLM_SMOKE_ATTENTION_BACKEND = "ROCM_SEGMENTED_ATTN", VLLM_ROCM_SEGMENTED_ATTN_AUTOTUNE = "0" } }
+
+test-segmented = { cmd = "../.venv/bin/python -m pytest tests/kernels/attention/test_segmented_attention.py tests/v1/attention/test_rocm_attention_backends_selection.py -k segmented -q", cwd = "vllm" }
+smoke-spec = { cmd = "../.venv/bin/python ../scripts/smoke_vllm.py", cwd = "vllm", env = { VLLM_SMOKE_ATTENTION_BACKEND = "ROCM_SEGMENTED_ATTN", VLLM_ROCM_SEGMENTED_ATTN_AUTOTUNE = "0", VLLM_SMOKE_SPEC_CONFIG = '{"method":"ngram","num_speculative_tokens":3,"prompt_lookup_min":1,"prompt_lookup_max":3}' } }
