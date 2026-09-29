@@ -1,0 +1,113 @@
+[workspace]
+name = "rocm10-vllm"
+version = "0.1.0"
+channels = ["conda-forge"]
+platforms = [{ platform = "linux-64", glibc = "2.35" }]
+
+[dependencies]
+python = "3.12.*"
+uv = "*"
+cmake = ">=3.26,<4"
+ninja = "*"
+git = "*"
+rust = "*"
+gxx_linux-64 = "*"
+pkg-config = "*"
+
+[pypi-options]
+index-url = "https://pypi.org/simple"
+extra-index-urls = ["https://stable.repo.amd.com/rocm/whl-next/"]
+index-strategy = "unsafe-best-match"
+
+[pypi-dependencies]
+rocm = { version = "==10.0.0", extras = ["libraries", "devel", "device-gfx1151"] }
+torch = { version = "==2.13.0+rocm10.0.0", extras = ["device-gfx1151"] }
+
+# vLLM ROCm runtime and build requirements at the pinned checkout.
+regex = "*"
+cachetools = "*"
+psutil = "*"
+sentencepiece = "*"
+numpy = "*"
+requests = ">=2.26.0"
+tqdm = "*"
+blake3 = "*"
+py-cpuinfo = "*"
+transformers = ">=5.10.4"
+huggingface-hub = ">=1.31.0"
+tokenizers = ">=0.21.1"
+safetensors = ">=0.6.2"
+protobuf = "!=6.30.*,!=6.31.*,!=6.32.*,!=6.33.0.*,!=6.33.1.*,!=6.33.2.*,!=6.33.3.*,!=6.33.4.*,>=5.29.6"
+fastapi = { version = "<0.137.0,>=0.133.0", extras = ["standard"] }
+starlette = ">=1.0.1"
+aiohttp = ">=3.13.3"
+openai = ">=2.25.0"
+pydantic = ">=2.12.0"
+prometheus-client = ">=0.18.0"
+pillow = "*"
+prometheus-fastapi-instrumentator = ">=8.0.0"
+tiktoken = ">=0.6.0"
+lm-format-enforcer = "==0.11.3"
+llguidance = "<1.8.0,>=1.7.0"
+outlines-core = "==0.2.14"
+lark = "==1.2.2"
+xgrammar = "<1.0.0,>=0.2.1"
+typing-extensions = ">=4.10"
+filelock = ">=3.16.1"
+partial-json-parser = "*"
+jsonschema = ">=4.23.0"
+pyzmq = ">=25.0.0"
+msgspec = "*"
+mistral-common = { version = ">=1.11.6", extras = ["image"] }
+opencv-python-headless = ">=4.13.0"
+pyyaml = "*"
+six = ">=1.16.0"
+setuptools = "<80.0.0,>=77.0.3"
+einops = "*"
+compressed-tensors = "==0.17.0"
+depyf = "==0.20.0"
+cloudpickle = "*"
+watchfiles = "*"
+python-json-logger = "*"
+pybase64 = "*"
+cbor2 = "*"
+ijson = "*"
+setproctitle = "*"
+openai-harmony = ">=0.0.3"
+anthropic = ">=0.71.0"
+model-hosting-container-standards = "<1.0.0,>=0.1.14"
+mcp = "<3.0.0,>=2.0.0"
+opentelemetry-sdk = ">=1.27.0"
+opentelemetry-api = ">=1.27.0"
+opentelemetry-exporter-otlp = ">=1.27.0"
+opentelemetry-semantic-conventions-ai = ">=0.4.1"
+grpcio = "==1.78.0"
+grpcio-reflection = "==1.78.0"
+numba = "==0.65.0"
+datasets = "*"
+peft = "*"
+pytest-asyncio = "*"
+tensorizer = "==2.10.1"
+packaging = ">=26.2"
+setuptools-scm = ">=8"
+setuptools-rust = ">=1.9.0"
+runai-model-streamer = { version = "==0.15.7", extras = ["azure", "gcs", "s3"] }
+conch-triton-kernels = "==1.2.1"
+timm = ">=1.0.17"
+amd-quark = "==0.12.post1"
+tilelang = "==0.1.10"
+apache-tvm-ffi = "==0.1.10"
+fastsafetensors = ">=0.3.3"
+mooncake-transfer-engine-rocm = ">=0.3.13"
+wheel = "*"
+jinja2 = ">=3.1.6"
+amdsmi = { path = "vendor/amdsmi" }
+
+[activation]
+scripts = ["scripts/activate_rocm.sh"]
+
+[tasks]
+check-torch = "python scripts/check_torch.py"
+install-vllm = { cmd = "bash scripts/install_vllm.sh" }
+smoke = { cmd = "python ../scripts/smoke_vllm.py", cwd = "vllm" }
+smoke-segmented = { cmd = "python ../scripts/smoke_vllm.py", cwd = "vllm", env = { VLLM_SMOKE_ATTENTION_BACKEND = "ROCM_SEGMENTED_ATTN", VLLM_ROCM_SEGMENTED_ATTN_AUTOTUNE = "0" } }
