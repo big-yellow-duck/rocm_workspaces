@@ -13,3 +13,5 @@ gcc_cxx_include="${gcc_toolchain}/include/c++"
 export CPLUS_INCLUDE_PATH="${gcc_cxx_include}:${gcc_cxx_include}/x86_64-conda-linux-gnu${CPLUS_INCLUDE_PATH:+:${CPLUS_INCLUDE_PATH}}"
 export LIBRARY_PATH="${gcc_toolchain}${LIBRARY_PATH:+:${LIBRARY_PATH}}"
 export LDFLAGS="${LDFLAGS:-} -Wl,--sysroot=${CONDA_BUILD_SYSROOT}"
+# HIP's Clang must use the same C headers and linker sysroot as Conda GCC.
+export HIPFLAGS="--sysroot=${CONDA_BUILD_SYSROOT} ${HIPFLAGS:-}"
