@@ -7,9 +7,9 @@ Use the workspace matching your GPU:
 - [gfx1201 — Radeon AI PRO R9700](gfx1201/README.md)
 
 The [project README](../README.md) includes the current gfx1151 quick start
-and verification summary. The gfx1151 and gfx1201 workspaces pin the ROCm/PyTorch stack
+and verification summary. GPU-specific workspaces pin the ROCm/PyTorch stack
 and provide build tools through Pixi, while vLLM resolves its runtime
-dependencies with uv. gfx1100 retains its earlier dependency configuration.
+dependencies with uv.
 
 The manifest and scripts directly in this directory are legacy configuration.
 The old shared environment's vLLM installation and the `vllm/` and

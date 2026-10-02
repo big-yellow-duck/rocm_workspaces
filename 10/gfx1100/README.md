@@ -1,8 +1,9 @@
-# ROCm 10 vLLM development workspace
+# ROCm 10 / gfx1100 vLLM development workspace
 
-This workspace targets the local `gfx1100` GPU. `pixi.lock` pins Python 3.12,
-ROCm 10.0.0, AMD PyTorch 2.13.0, GCC 14, and the fork's Python requirements.
-The vLLM fork is an editable checkout.
+This workspace targets `gfx1100` GPUs with Python 3.12, ROCm 10.0.0,
+AMD PyTorch 2.13.0, and GCC 14. Pixi manages the ROCm/PyTorch stack plus
+build, lint, and test tools. uv resolves vLLM's runtime dependencies directly
+from the editable checkout; they are not duplicated in `pixi.toml`.
 
 ROCm needs read/write access to `/dev/kfd` and the DRM render nodes. On a new
 host, add your user to the `render` group once, then log out and back in:
@@ -18,26 +19,49 @@ cd vllm-rocm-segmented-attn
 git checkout 4f208193293dde825c367f760559ba0faa727cfb
 cd ..
 pixi install --locked
+ln -sfn .pixi/envs/default .venv
 pixi run check-torch
 pixi run install-vllm
 pixi run smoke
 pixi run smoke-segmented
 ```
 
-The `install-vllm` task runs the fork's `use_existing_torch.py --prefix` to
-remove its incompatible PyTorch pins, then builds the checkout in editable
-mode without resolving dependencies. Pixi installs all Python and build
-dependencies first. The task also patches the ROCm 10 rocPRIM header inside
-the Pixi environment so HIP can compile its device-side placement-new path.
-The activation script exposes the AMD SMI 27 Python binding bundled with the
-ROCm SDK. That helper changes tracked dependency files in
-`vllm-rocm-segmented-attn/`; this is expected. Re-run the task after changing
-build code.
+`.venv` links to the Pixi environment. Use `pixi run` or `pixi shell` to
+activate the ROCm SDK, AMD SMI binding, compiler, and library paths.
 
-Set `VLLM_SMOKE_MODEL` to use a different Hugging Face model for the smoke
-test. The default downloads `Qwen/Qwen2.5-0.5B-Instruct` and checks that a
-short prompt yields a nonempty completion.
+`install-vllm` uses `--no-build-isolation` and constrains explicitly
+Pixi-managed Python packages to their installed versions. uv installs vLLM's
+runtime requirements while preserving the ROCm/PyTorch and build-tool stack.
+vLLM's own version constraints still apply. The resolver uses PyPI and AMD's
+index with `unsafe-best-match`, matching Pixi's index policy.
 
-`smoke-segmented` selects the fork's `ROCM_SEGMENTED_ATTN` backend on this
-`gfx1100` GPU with the normal FP16 KV cache. The backend allows FP16/BF16 KV
-on `gfx1x`; its `gfx12` restriction applies to FP8 KV.
+This revision's ROCm runtime requirements do not pin PyTorch, so the installer
+does not run `use_existing_torch.py` or modify tracked dependency files.
+Existing edits made by earlier runs of that helper are preserved. The build
+patches the ROCm 10 rocPRIM header inside the environment and exposes the
+AMD SMI Python binding bundled with the SDK. `MAX_JOBS` defaults to 4.
+
+After `pixi install` or changing vLLM revisions, run `pixi run install-vllm`
+to reconcile runtime dependencies. Preview changes with
+`pixi run install-vllm --dry-run`.
+
+Set `VLLM_SMOKE_MODEL` to choose a different model. The default is
+`Qwen/Qwen2.5-0.5B-Instruct`; the smoke check requires a nonempty completion.
+`smoke-segmented` selects `ROCM_SEGMENTED_ATTN` with FP16 KV cache and
+startup autotuning disabled. FP8 KV requires `gfx12` hardware.
+
+## Validated on 2026-10-02
+
+- Fresh `pixi install --locked` and native editable `install-vllm`: passed.
+- `check-torch`: passed on AMD Radeon RX 7900 XTX; PyTorch remains
+  `2.13.0+rocm10.0.0` and ROCm remains `10.0.0`.
+- `uv pip check`: all 234 installed packages compatible.
+- `smoke` and `smoke-segmented`: passed with Qwen2.5-0.5B-Instruct;
+  both returned `Paris. It is the largest city in`.
+
+These smoke checks use eager execution and FP16 KV cache. Logs are in `logs/`.
+The running session had not picked up the account's existing render-group
+membership, so GPU checks used `sg render -c 'pixi run <task>'`.
+
+The workspace uses the fresh, validated `.pixi/envs/default` environment;
+`.venv` points to it. The previous environment backup has been removed.
