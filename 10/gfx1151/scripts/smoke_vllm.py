@@ -1,3 +1,4 @@
+import json
 import os
 
 from vllm import LLM, SamplingParams
@@ -12,6 +13,8 @@ llm = LLM(
     gpu_memory_utilization=0.5,
     enforce_eager=True,
     attention_backend=attention_backend,
+    kv_cache_dtype=os.environ.get("VLLM_SMOKE_KV_CACHE_DTYPE", "auto"),
+    speculative_config=json.loads(os.environ.get("VLLM_SMOKE_SPEC_CONFIG", "null")),
 )
 outputs = llm.generate(
     ["The capital of France is"],
