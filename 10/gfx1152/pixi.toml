@@ -48,3 +48,5 @@ scripts = ["scripts/activate_rocm.sh"]
 check-torch = "python scripts/check_torch.py"
 check-smi = "amd-smi static --asic"
 smoke = "python scripts/smoke_rocm.py"
+install-flydsl = "bash scripts/install_flydsl.sh"
+vectoradd = "python scripts/vectorAdd_flydsl.py"

@@ -48,3 +48,26 @@ On Fedora/Bazzite with Linux 7.2.7 and AMD Radeon 860M:
 
 The workload is a functional smoke check, not a controlled performance
 benchmark. No vLLM or model inference validation was performed.
+
+## FlyDSL vector addition
+
+Install the pinned published wheel into the same environment using uv:
+
+```bash
+pixi run install-flydsl
+pixi run vectoradd
+```
+
+FlyDSL 0.3.4.1 declares no Python dependencies; the installer uses `--no-deps`
+to preserve the Pixi-managed ROCm/PyTorch stack. Re-run `install-flydsl` after
+`pixi install`, which may remove packages installed separately with uv.
+
+The vector-add kernel is adapted from
+[the upstream v0.3.4.1 example](https://github.com/ROCm/FlyDSL/blob/v0.3.4.1/examples/01-vectorAdd.py),
+retaining its Apache-2.0 attribution. The runner checks native gfx1152 and
+compares GPU results with PyTorch for 1×4, 8×64, and 100×1000 FP32 inputs,
+including partial tiles. It synchronizes the input and kernel streams and
+raises on incorrect results.
+
+Validated on 2026-10-07: uv installed FlyDSL 0.3.4.1; the upstream
+100×1000 example and all three workspace vector-add cases passed.
