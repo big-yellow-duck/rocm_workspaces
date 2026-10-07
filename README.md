@@ -9,6 +9,7 @@ in editable mode and resolves its runtime dependencies from the checkout.
 | --- | --- |
 | gfx1100 | [Setup and usage](10/gfx1100/README.md) |
 | gfx1151 — AMD Radeon 8060S | [Setup, usage, and verification](10/gfx1151/README.md) |
+| gfx1152 — AMD Radeon 860M | [Setup and GPU validation](10/gfx1152/README.md) |
 | gfx1201 — Radeon AI PRO R9700 | [Setup, usage, and verification](10/gfx1201/README.md) |
 
 ## gfx1151 quick start
