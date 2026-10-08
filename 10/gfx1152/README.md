@@ -48,34 +48,3 @@ On Fedora/Bazzite with Linux 7.2.7 and AMD Radeon 860M:
 
 The workload is a functional smoke check, not a controlled performance
 benchmark. No vLLM or model inference validation was performed.
-
-## FlyDSL vector addition
-
-Install the pinned published wheel into the same environment using uv:
-
-```bash
-pixi run install-flydsl
-pixi run vectoradd
-```
-
-FlyDSL 0.3.4.1 declares no Python dependencies; the installer uses `--no-deps`
-to preserve the Pixi-managed ROCm/PyTorch stack. Re-run `install-flydsl` after
-`pixi install`, which may remove packages installed separately with uv.
-
-The example is now contained in [00vectoradd/](00vectoradd/README.md), with
-only two kernels: the original naive baseline and the selected winner.
-Both add contiguous 1024×1024 FP32 tensors. The winner uses 64 threads per
-block, 8192 blocks, two FP32 values per thread, and `slc` loads/stores.
-
-```bash
-pixi run vectoradd
-pixi run profile-vectoradd
-pixi run view-vectoradd naive
-pixi run view-vectoradd winner
-```
-
-The original tuning selected the winner with a median paired GPU speedup
-of 1.01777× over `torch.add(a, b, out=c)` in a 24-round comparison on
-2026-10-07. That measurement used GPU graphs in auto power mode. The ATT
-captures use stable profiling power so we can inspect instructions and
-memory waits. See the example README for the source and capture workflow.
