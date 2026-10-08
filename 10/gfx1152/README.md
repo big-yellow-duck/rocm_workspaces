@@ -62,82 +62,20 @@ FlyDSL 0.3.4.1 declares no Python dependencies; the installer uses `--no-deps`
 to preserve the Pixi-managed ROCm/PyTorch stack. Re-run `install-flydsl` after
 `pixi install`, which may remove packages installed separately with uv.
 
-The vector-add kernel is adapted from
-[the upstream v0.3.4.1 example](https://github.com/ROCm/FlyDSL/blob/v0.3.4.1/examples/01-vectorAdd.py),
-retaining its Apache-2.0 attribution. The runner checks native gfx1152 and
-compares GPU results with PyTorch for 1×4, 8×64, and 100×1000 FP32 inputs,
-including partial tiles. It synchronizes the input and kernel streams and
-raises on incorrect results.
-
-Validated on 2026-10-07: uv installed FlyDSL 0.3.4.1; the upstream
-100×1000 example and all three workspace vector-add cases passed.
-
-## Tuned 1024×1024 vector addition
+The example is now contained in [00vectoradd/](00vectoradd/README.md), with
+only two kernels: the original naive baseline and the selected winner.
+Both add contiguous 1024×1024 FP32 tensors. The winner uses 64 threads per
+block, 8192 blocks, two FP32 values per thread, and `slc` loads/stores.
 
 ```bash
-pixi run vectoradd-optimized
-pixi run bench-vectoradd --require-speedup
-# Sweep block size, vector width, grid geometry, and cache policy.
-pixi run tune-vectoradd --layout asm
-# Recheck the best ten candidates from a saved sweep, with longer samples.
-pixi run tune-vectoradd --finalists logs/vectoradd_tuning.json --rounds 24 --repeats 30
+pixi run vectoradd
+pixi run profile-vectoradd
+pixi run view-vectoradd naive
+pixi run view-vectoradd winner
 ```
 
-The selected gfx1152 preset uses **64 threads per block, grid (8192, 1, 1),
-and two FP32 values per thread (64-bit vector loads/stores)**. Both reads and
-writes use the GFX11 `slc` cache modifier. The FlyDSL kernel uses scalar base
-addresses with unsigned 32-bit byte offsets, avoiding per-thread 64-bit
-address construction. It waits for both input reads before adding the values;
-early-clobber constraints protect the address register during those reads.
-The ordinary tiled example remains available as `pixi run vectoradd`.
-
-Use the checked helper from the workspace's `scripts/` directory:
-
-```python
-import torch
-from flydsl_vectoradd import add_1024
-
-a = torch.randn(1024, 1024, device="cuda", dtype=torch.float32)
-b = torch.randn_like(a)
-out = torch.empty_like(a)
-add_1024(a, b, out)
-```
-
-This forward-only helper requires contiguous, 16-byte-aligned 1024×1024 FP32
-tensors on the same gfx1152 GPU. It honors the current PyTorch stream, or an
-explicit `stream=` argument. `vectoradd-optimized` checks exact results and
-eight dependent kernel launches on a non-default stream.
-
-### Performance verification on 2026-10-07
-
-The search covered blocks of 32–1024 threads; scalar, 64-bit, and 128-bit
-native loads; wider logical vectors; contiguous and striped layouts;
-smaller grids processing several tiles per block; and cache modifiers.
-The selected scalar-address kernel passed exact comparison with PyTorch.
-
-After the sweep and a separate 16-round finalist check, an independent
-24-round comparison of three finalists selected this preset:
-
-| Block threads | Grid blocks | Vector FP32 values | Load/store flags | Median paired speedup |
-| --- | --- | --- | --- | --- |
-| **64** | **8192** | **2** | **slc / slc** | **1.01777×** |
-| 128 | 4096 | 2 | glc slc / slc | 1.01763× |
-| 256 | 2048 | 2 | slc dlc / slc | 1.01534× |
-
-The selected preset won 23 of 24 paired rounds. Its median GPU time was
-126.520 µs versus 128.616 µs for `torch.add(a, b, out=c)`; the median of
-paired ratios gives a **1.8% improvement**. A resampling interval for the
-paired median ratio was 1.01566–1.02024 (95%, 20,000 resamples, seed 42).
-The leading settings are close; this is the best measured preset in this
-search, not a guarantee of identical rankings on another system.
-Two further independent 15-round checks of the selected preset won all
-15 paired rounds each, with median paired speedups of 1.00930× and 1.01519×.
-
-All kernels compile and pass exact-result checks before timing. Each sample
-uses HIP events around 30 replays of a 100-node GPU graph (3000 additions),
-with warmup on the same stream. Candidate and baseline order are randomized,
-and both use the same inputs and preallocated output. These are GPU execution
-timings; Python dispatch, first-use JIT compilation, and allocation are excluded.
-Early short-sample cache-hint gains did not reproduce in longer checks and
-were discarded. A rotating-buffer experiment was too variable to establish
-a reliable speedup. Local logs and raw measurements remain under `logs/`.
+The original tuning selected the winner with a median paired GPU speedup
+of 1.01777× over `torch.add(a, b, out=c)` in a 24-round comparison on
+2026-10-07. That measurement used GPU graphs in auto power mode. The ATT
+captures use stable profiling power so we can inspect instructions and
+memory waits. See the example README for the source and capture workflow.

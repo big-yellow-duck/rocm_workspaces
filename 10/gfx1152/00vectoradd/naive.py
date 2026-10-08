@@ -1,29 +1,19 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 FlyDSL Project Contributors
 
-"""Adapted from ROCm/FlyDSL v0.3.4.1 examples/01-vectorAdd.py.
+"""Naive baseline: FlyDSL v0.3.4.1's masked 8x64 tile, 128-bit copies.
 
-Vectorized, predicated, target-neutral 2D elementwise add (C = A + B).
-
-This example is **target-neutral**: it uses only the backend-agnostic ``flydsl.expr`` API, so it
-supports on any backend.
-
-Highlights:
-  1. **float4 vectorization** via ``UniversalCopy128b`` -- each copy atom moves 128 bits
-     (4 x f32) along the contiguous (N) axis, so every thread loads/stores one ``float4``.
-  2. **Predicated OOB masking**: the (M, N) shape need not be a multiple of the block tile,
-     so border blocks have threads whose float4 lies past the tensor. A per-atom boolean
-     predicate (``coord < (M, N)``) gates each copy, so a load/store never touches OOB memory.
+Adapted from ROCm/FlyDSL examples/01-vectorAdd.py.
 """
-
-import torch
 
 import flydsl.compiler as flyc
 import flydsl.expr as fx
 
+DEFAULT_STREAM = fx.Stream(None)
+
 
 @flyc.kernel
-def vector_add_kernel(
+def naive_kernel(
     A: fx.Tensor,
     B: fx.Tensor,
     C: fx.Tensor,
@@ -69,11 +59,11 @@ def vector_add_kernel(
 
 
 @flyc.jit
-def vector_add(
+def add(
     A: fx.Tensor,
     B: fx.Tensor,
     C: fx.Tensor,
-    stream: fx.Stream = fx.Stream(None),
+    stream: fx.Stream = DEFAULT_STREAM,
 ):
     copy_atom = fx.make_copy_atom(fx.UniversalCopy128b(), fx.Float32)
     tiled_copy = fx.make_tiled_copy_tv(
@@ -86,27 +76,6 @@ def vector_add(
     M, N = A.shape.unpack()
     grid_m = (M + tile_m - 1) // tile_m
     grid_n = (N + tile_n - 1) // tile_n
-    vector_add_kernel(A, B, C, tiled_copy).launch(
+    naive_kernel(A, B, C, tiled_copy).launch(
         grid=(grid_m, grid_n, 1), block=(8 * 16, 1, 1), stream=stream
     )
-
-
-def main() -> None:
-    assert torch.cuda.is_available(), "ROCm GPU unavailable"
-    props = torch.cuda.get_device_properties(0)
-    assert props.gcnArchName.split(":")[0] == "gfx1152", props.gcnArchName
-    torch.manual_seed(42)
-    stream = torch.cuda.Stream()
-    for M, N in [(1, 4), (8, 64), (100, 1000)]:
-        A = torch.randn(M, N, dtype=torch.float32, device="cuda")
-        B = torch.randn_like(A)
-        C = torch.zeros_like(A)
-        stream.wait_stream(torch.cuda.current_stream())
-        vector_add(A, B, C, stream=stream)
-        torch.cuda.synchronize()
-        torch.testing.assert_close(C, A + B)
-        print(f"PASS: gfx1152 vector add {M}x{N}", flush=True)
-
-
-if __name__ == "__main__":
-    main()
