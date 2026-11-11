@@ -1,6 +1,6 @@
 # ROCm 10 / gfx1100 vLLM development workspace
 
-This workspace targets `gfx1100` GPUs with Python 3.12, ROCm 10.0.0,
+This workspace targets `gfx1100` GPUs with Python 3.12, ROCm 10.1.0,
 AMD PyTorch 2.13.0, and GCC 14. Pixi manages the ROCm/PyTorch stack plus
 build, lint, and test tools. uv resolves vLLM's runtime dependencies directly
 from the editable checkout; they are not duplicated in `pixi.toml`.
@@ -54,7 +54,7 @@ startup autotuning disabled. FP8 KV requires `gfx12` hardware.
 
 - Fresh `pixi install --locked` and native editable `install-vllm`: passed.
 - `check-torch`: passed on AMD Radeon RX 7900 XTX; PyTorch remains
-  `2.13.0+rocm10.0.0` and ROCm remains `10.0.0`.
+  `2.13.0+rocm10.1.0` and ROCm remains `10.1.0`.
 - `uv pip check`: all 234 installed packages compatible.
 - `smoke` and `smoke-segmented`: passed with Qwen2.5-0.5B-Instruct;
   both returned `Paris. It is the largest city in`.

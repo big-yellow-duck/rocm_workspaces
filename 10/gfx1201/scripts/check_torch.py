@@ -1,7 +1,7 @@
 import torch
 
 print(f"torch={torch.__version__}, HIP={torch.version.hip}")
-assert torch.__version__.startswith("2.13.0+rocm10.0.0")
+assert torch.__version__.startswith("2.13.0+rocm10.1.0")
 assert torch.version.hip is not None
 assert torch.cuda.is_available(), "ROCm GPU is unavailable"
 for index in range(torch.cuda.device_count()):

@@ -1,7 +1,7 @@
 # ROCm development workspaces
 
 GPU-specific Pixi environments for building and running vLLM with AMD ROCm.
-The ROCm 10 workspaces use Python 3.12, ROCm 10.0.0, and AMD PyTorch 2.13.0.
+The ROCm 10 workspaces use Python 3.12, ROCm 10.1.0, and AMD PyTorch 2.13.0.
 Pixi manages the ROCm/PyTorch stack and development tools; uv installs vLLM
 in editable mode and resolves its runtime dependencies from the checkout.
 

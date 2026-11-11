@@ -21,8 +21,8 @@ extra-index-urls = ["https://stable.repo.amd.com/rocm/whl-next/"]
 index-strategy = "unsafe-best-match"
 
 [pypi-dependencies]
-rocm = { version = "==10.0.0", extras = ["libraries", "devel", "device-gfx1100"] }
-torch = { version = "==2.13.0+rocm10.0.0", extras = ["device-gfx1100"] }
+rocm = { version = "==10.1.0", extras = ["libraries", "devel", "device-gfx1100"] }
+torch = { version = "==2.13.0+rocm10.1.0", extras = ["device-gfx1100"] }
 
 # Build dependencies must be present for --no-build-isolation.
 setuptools = "<80.0.0,>=77.0.3"

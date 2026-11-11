@@ -16,8 +16,8 @@ def smi(*args: str) -> None:
 def main() -> None:
     smi("version")
     smi("static", "--asic")
-    assert torch.__version__.startswith("2.13.0+rocm10.0.0"), torch.__version__
-    assert version("rocm") == "10.0.0", version("rocm")
+    assert torch.__version__.startswith("2.13.0+rocm10.1.0"), torch.__version__
+    assert version("rocm") == "10.1.0", version("rocm")
     assert torch.version.hip is not None, "PyTorch lacks HIP support"
     assert torch.cuda.is_available(), "ROCm GPU unavailable"
     props = torch.cuda.get_device_properties(0)

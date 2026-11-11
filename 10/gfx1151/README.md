@@ -1,7 +1,7 @@
 # ROCm 10 / gfx1151 vLLM workspace
 
 Native development environment for the AMD Radeon 8060S (`gfx1151`).
-Pixi manages Python 3.12, ROCm 10.0.0, AMD PyTorch 2.13.0, GCC 14,
+Pixi manages Python 3.12, ROCm 10.1.0, AMD PyTorch 2.13.0, GCC 14,
 and build and test tools. vLLM resolves its own runtime dependencies with uv;
 these requirements are not duplicated in the Pixi manifest or lockfile.
 
@@ -54,7 +54,7 @@ Checkout: `perf/rocm-segmented-attn` at
 
 - Native editable installation passed.
 - `uv pip check`: all 234 installed packages compatible.
-- `check-torch`: Torch `2.13.0+rocm10.0.0`, ROCm `10.0.0`, GPU tensor check passed.
+- `check-torch`: Torch `2.13.0+rocm10.1.0`, ROCm `10.1.0`, GPU tensor check passed.
 - `smoke`: Qwen2.5-0.5B-Instruct generation passed with `ROCM_ATTN`.
 - `smoke-segmented`: generation passed with `ROCM_SEGMENTED_ATTN` and FP16 KV.
 - Both completions: `Paris. It is the largest city in`.

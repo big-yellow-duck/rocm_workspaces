@@ -1,7 +1,7 @@
 # ROCm 10 / gfx1152 PyTorch workspace
 
 Native Pixi environment for AMD Radeon 860M (`gfx1152`), matching the
-other GPU workspaces: Python 3.12, ROCm 10.0.0, AMD PyTorch 2.13.0,
+other GPU workspaces: Python 3.12, ROCm 10.1.0, AMD PyTorch 2.13.0,
 GCC 14, and development tools. GPU kernel packages target gfx1152.
 
 From the repository root:
@@ -35,9 +35,9 @@ Local environments, editor links, and logs are ignored by Git.
 On Fedora/Bazzite with Linux 7.2.7 and AMD Radeon 860M:
 
 - `pixi install --locked`: passed.
-- Python 3.12.15, ROCm package 10.0.0, Torch 2.13.0+rocm10.0.0.
+- Python 3.12.15, ROCm package 10.1.0, Torch 2.13.0+rocm10.1.0.
 - Torch reports HIP 7.15.26333; this is the wheel's embedded HIP build
-  version. SDK AMD SMI reports ROCm 10.0.0.
+  version. SDK AMD SMI reports ROCm 10.1.0.
 - `check-smi`: native gfx1152, eight compute units.
 - `check-torch`: GPU tensor operation passed.
 - `smoke`: CPU/GPU FP32 comparison, autograd, finite results, and AMD SMI

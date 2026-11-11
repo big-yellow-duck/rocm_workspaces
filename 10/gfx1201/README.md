@@ -1,7 +1,7 @@
 # ROCm 10 / gfx1201 vLLM workspace
 
 Native development environment for the Radeon AI PRO R9700 GPUs. Adapted from
-`../gfx1100`: Python 3.12, ROCm 10.0.0, AMD PyTorch 2.13.0, GCC 14, and
+`../gfx1100`: Python 3.12, ROCm 10.1.0, AMD PyTorch 2.13.0, GCC 14, and
 `device-gfx1201` libraries. Pixi locks the ROCm/PyTorch stack plus build, lint, and test tools. vLLM
 resolves and installs its own runtime dependencies with uv.
 
